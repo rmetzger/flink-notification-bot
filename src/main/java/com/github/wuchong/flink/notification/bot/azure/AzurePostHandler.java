@@ -15,12 +15,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.github.wuchong.flink.notification.bot.azure;
 
-package com.github.wuchong.flink.notification.bot.travis;
 
 import com.github.wuchong.flink.notification.bot.email.Email;
 import com.github.wuchong.flink.notification.bot.email.EmailGenerator;
 import com.github.wuchong.flink.notification.bot.email.EmailSender;
+import com.github.wuchong.flink.notification.bot.travis.BuildResult;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import org.slf4j.Logger;
@@ -29,6 +30,7 @@ import org.slf4j.LoggerFactory;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
@@ -38,9 +40,9 @@ import static com.github.wuchong.flink.notification.bot.email.EmailGenerator.isC
 import static com.github.wuchong.flink.notification.bot.email.EmailGenerator.isMasterOrReleaseBranch;
 import static com.github.wuchong.flink.notification.bot.email.EmailGenerator.isPassed;
 
-public class TravisPostHandler implements HttpHandler {
+public class AzurePostHandler implements HttpHandler {
 
-    private static final Logger LOG = LoggerFactory.getLogger(TravisPostHandler.class);
+    private static final Logger LOG = LoggerFactory.getLogger(AzurePostHandler.class);
 
     @SuppressWarnings("unchecked")
     @Override
@@ -48,20 +50,14 @@ public class TravisPostHandler implements HttpHandler {
         // parse request
         InputStreamReader isr = new InputStreamReader(exchange.getRequestBody(), StandardCharsets.UTF_8);
         BufferedReader br = new BufferedReader(isr);
-        String payload = br.readLine();
-        try {
-            Map<String, String> builds = BuildResult.parse(payload);
-            if (isApacheFlink(builds) &&
-                    isMasterOrReleaseBranch(builds) &&
-                    !isCanceled(builds) &&
-                    !isPassed(builds)) {
-                Email email = EmailGenerator.createEmail(builds);
-                EmailSender.send(email);
-            } else {
-                LOG.info("Ignore builds notification: {}", generateSubject(builds));
-            }
-        } catch (Exception e) {
-            LOG.warn("Corrupt payload: " + payload, e);
+        String payload;
+        while( (payload = br.readLine()) != null) {
+            LOG.info("PAYLOAD: " + payload);
         }
+        String response = "Thank you";
+        exchange.sendResponseHeaders(200, response.getBytes().length);
+        OutputStream os = exchange.getResponseBody();
+        os.write(response.getBytes());
+        os.close();
     }
 }

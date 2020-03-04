@@ -18,6 +18,7 @@
 
 package com.github.wuchong.flink.notification.bot;
 
+import com.github.wuchong.flink.notification.bot.azure.AzurePostHandler;
 import com.github.wuchong.flink.notification.bot.email.EmailConfig;
 import com.github.wuchong.flink.notification.bot.email.EmailSender;
 import com.github.wuchong.flink.notification.bot.travis.TravisPostHandler;
@@ -39,6 +40,7 @@ public class FlinkHttpServer {
         HttpServer server = HttpServer.create(new InetSocketAddress(port), 0);
         System.out.println("server started at " + port);
         server.createContext("/travis", new TravisPostHandler());
+        server.createContext("/azp", new AzurePostHandler());
         server.setExecutor(Executors.newFixedThreadPool(4));
         server.start();
     }
